@@ -1,4 +1,5 @@
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const Joi = require("joi");
 const express = require("express");
 const router = express.Router();
@@ -37,7 +38,13 @@ router.post("/", async (req, res) => {
 
   await newUser.save();
 
-  res.status(201).json(newUser);
+  const token = jwt.sign(
+    { _id: newUser._id, name: newUser.name },
+    process.env.JWT_KEY,
+    { expiresIn: "2h" }
+  );
+
+  res.status(201).json(token);
 });
 
 module.exports = router;
