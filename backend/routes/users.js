@@ -38,13 +38,37 @@ router.post("/", async (req, res) => {
 
   await newUser.save();
 
-  const token = jwt.sign(
-    { _id: newUser._id, name: newUser.name },
-    process.env.JWT_KEY,
-    { expiresIn: "2h" }
-  );
+  const token = generateToken({ _id: user._id, name: user.name });
 
   res.status(201).json(token);
 });
+
+router.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+
+  const user = await User.find({ email });
+
+  if (!user) {
+    return res.status(401).json({ message: "Invalid credentials." });
+  };
+
+  const validPassword = bcrypt.compare(password, user.password);
+
+  if (!validPassword) {
+    return res.status(401).json({ message: "Invalid credentials." });
+  };
+
+  const token = generateToken({ _id: user._id, name: user.name });
+
+  res.status(201).json(token);
+});
+
+const generateToken = (data) => {
+  return jwt.sign(
+    data,
+    process.env.JWT_KEY,
+    { expiresIn: "2h" }
+  );
+}
 
 module.exports = router;
